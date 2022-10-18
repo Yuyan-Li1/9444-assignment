@@ -31,50 +31,51 @@ args = parser.parse_args()
 if args.lang == 'reber':
     num_class = 7
     hid_default = 2
-    lang = lang_reber(args.embed,args.length)
+    lang = lang_reber(args.embed, args.length)
     if args.embed:
         max_state = 18
     else:
-        max_state =  6
+        max_state = 6
 elif args.lang == 'anbn':
     num_class = 2
     hid_default = 2
     if args.length == 0:
         args.length = 8
-    lang = lang_anbn(num_class,args.length)
+    lang = lang_anbn(num_class, args.length)
     max_state = args.length
 elif args.lang == 'anbncn':
     num_class = 3
     hid_default = 3
     if args.length == 0:
         args.length = 8
-    lang = lang_anbn(num_class,args.length)
+    lang = lang_anbn(num_class, args.length)
     max_state = args.length
 
 if args.hid == 0:
     args.hid = hid_default
-    
+
 if args.model == 'srn':
-    net = SRN_model(num_class,args.hid,num_class)
+    net = SRN_model(num_class, args.hid, num_class)
 elif args.model == 'lstm':
-    net = LSTM_model(num_class,args.hid,num_class)
+    net = LSTM_model(num_class, args.hid, num_class)
 
-path = args.out_path+'/'
-net.load_state_dict(torch.load(path+'%s_%s%d_%d.pth'
-                    %(args.lang,args.model,args.hid,args.epoch)))
+path = args.out_path + '/'
+net.load_state_dict(torch.load(path + '%s_%s%d_%d.pth'
+                               % (args.lang, args.model, args.hid, args.epoch)))
 
-np.set_printoptions(suppress=True,precision=2)
+np.set_printoptions(suppress=True, precision=2)
 
 for weight in net.parameters():
     print(weight.data.numpy())
 
 if args.hid == 2:
-    plt.plot(net.H0.data[0],net.H0.data[1],'bx') 
-elif args.hid == 3:    
+    plt.plot(net.H0.data[0], net.H0.data[1], 'bx')
+elif args.hid == 3:
     fig = plt.figure()
-    ax = Axes3D(fig)
-    ax.plot(net.H0.data[0],net.H0.data[1],net.H0.data[2],'bx') 
-    
+    # ax = Axes3D(fig)
+    ax = fig.add_subplot(projection='3d')
+    ax.plot(net.H0.data[0], net.H0.data[1], net.H0.data[2], 'bx')
+
 with torch.no_grad():
     net.eval()
 
@@ -87,15 +88,15 @@ with torch.no_grad():
         hidden_seq, output = net(input)
 
         hidden = hidden_seq.squeeze()
-        
+
         lang.print_outputs(epoch, seq, state, hidden, target, output)
         sys.stdout.flush()
 
         if args.hid == 2:
-            plt.scatter(hidden[:,0],hidden[:,1], c=state[1:],
+            plt.scatter(hidden[:, 0], hidden[:, 1], c=state[1:],
                         cmap='jet', vmin=0, vmax=max_state)
         else:
-            ax.scatter(hidden[:,0],hidden[:,1],hidden[:,2],
+            ax.scatter(hidden[:, 0], hidden[:, 1], hidden[:, 2],
                        c=state[1:], cmap='jet',
                        vmin=0, vmax=max_state)
 
